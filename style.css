@@ -1,0 +1,31 @@
+/*
+ *rpg-test-map-editor by Literal Line
+ *more at quique.gq
+ */
+
+@font-face {
+    font-family: 'Zelda DX';
+    src: url('./assets/zeldadxt.ttf');
+}
+
+body {
+    background: #111111;
+    color: #FFFFFF;
+    font-family: "Zelda DX";
+    text-align: center;
+}
+
+canvas {
+    /*border: 1px solid #FFFFFF;*/
+    /*cursor: url('./assets/cursor.png'), auto;*/
+    display: block;
+    margin: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+}
+
+#preload {
+    position: absolute;
+    z-index: -999;
+    opacity: 0;
+}
