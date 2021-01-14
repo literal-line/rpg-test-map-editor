@@ -6,8 +6,6 @@ var RPG_TEST_MAP_EDITOR = (function () {
 
   var canvas = document.createElement('canvas');
   var stage = canvas.getContext('2d');
-  var importButton = document.createElement('button');
-  var exportButton = document.createElement('button');
   var output = document.createElement('textarea');
   var gameSettings = {
     version: 'v0.1-20210111-1754est',
@@ -36,30 +34,32 @@ var RPG_TEST_MAP_EDITOR = (function () {
     canvas.addEventListener('mouseup', function () {
       mouse.down = false;
     });
-    addEventListener('blur', function () {
+    canvas.addEventListener('mouseleave', function () {
       mouse.down = false;
-    });
-
-    importButton.addEventListener('click', function() {
-      importMap();
-    });
-    exportButton.addEventListener('click', function() {
-      exportMap();
     });
   };
 
-  var importMap = function() {
-    var data = prompt('Paste map data below:');
+  var importMap = function() { // import map
+    var data = prompt('Paste map data string below:');
+    if (!data) return;
     data = data.split(' ');
     mapData = data;
   };
 
-  var exportMap = function() {
-    var data = '';
-    for (var i = 0; i < mapData.length; i++) {
-      data = data + mapData[i] + ' ';
+  var exportMapString = function(data) { // export map as sting (for use with import)
+    var output = '';
+    for (var i = 0; i < data.length; i++) {
+      output = output + data[i] + (i === data.length - 1 ? '' : ' ');
     }
-    output.value = data;
+    return output;
+  };
+
+  var exportMapArray = function(data) { // export map as array (for use with js)
+    var output = '';
+    for (var i = 0; i < data.length; i++) {
+      output = output + (i === 0 ? '[ // the chunky soup you ordered, sir:\n\'' : '\'') + data[i] + (i === data.length - 1 ? '\'\n]' : '\', \n');
+    }
+    return output;
   };
 
   var mouseClick = function () { // prevents buttons from being clicked when click-dragging
@@ -83,8 +83,6 @@ var RPG_TEST_MAP_EDITOR = (function () {
   };
 
   var sprites = { // image to img
-    logo: newImage(assets.logo),
-    itemDrops: newImage(assets.itemDrops),
     tilesetMap: newImage(assets.tilesetMap),
     tilesetGrass: newImage(assets.tilesetGrass)
   };
@@ -115,7 +113,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
     '#833f34',
     '#eb9c6e',
     '#ffdaac',
-    '#fffff4',
+    '#ffffff',
     '#bfc3c6',
     '#6d8a8d',
     '#293b49',
@@ -138,8 +136,6 @@ var RPG_TEST_MAP_EDITOR = (function () {
     canvas.style.height = gameSettings.heightCSS;
     canvas.style.background = gameSettings.bg;
     stage.imageSmoothingEnabled = gameSettings.aa;
-    importButton.innerText = 'Import';
-    exportButton.innerText = 'Export';
     output.rows = 17;
     output.cols = 200;
     setupEventListeners();
@@ -219,25 +215,25 @@ var RPG_TEST_MAP_EDITOR = (function () {
     };
   })();
 
-  var mapData = [ // big chunky soup
-    'dddddd45a000000004a0000000b076ddddddddddd1c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'dddddddd45a0000000455a000760bddddddddddd1c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'dddddddddd4555a00000045556076ddddddd1222c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'ddddddd122c000455a000000000bddddd122c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'dddd122c000000000455a0000076dddd1c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'ddd1c0000000000000004555556dddd1c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    'd12c000000000000000008dddddddd1c0000000000000000000000000000000075555a07550000000000000000000000000000000000000000000000000000000000000000000000',
-    'db00000000000000000008ddddddddb0000000000000000000000000000000008ddddb76dd0000000000000000000000000000000000000000000000000000000000000000000000',
-    'db000000000000000000092223ddddb0000000000000000000000075555a00008dddd76ddd0000000000000000000000000000555550000000000000000000000000000000000000',
-    '2222300000000000000000000923d1c000045a00000000000000008ffffb00008dddd6dddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '00009300000000000000075a00092c00000004555555555555a0008ffffb00755ddddddddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '00000b0000000000000008d4a000000000000000000000000045555ffff5556ddddddddddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '5555560000000000000008dd45a0000000000000000000000000007ffff5555adddddddddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '0000000000000000000076dddd45555300000000000000000000008ffffddddddddddddddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '000000000000000075556dddddddddd455a00000755a00000000008ffffddddddddddddddd0000000000000000000000000000000000000000000000000000000000000000000000',
-    '0007555555a007556ddddddddddddddddd4a00076dd455555a007a9222223ddddddddddddd0000000000000000000000000000000000000000000000000000000000000000000000 ',
-    '5556dddddd4556ddddddddddddddddddddd45556ddddddddd455645555556ddddddddddddd0000000000000000000000000000000000000000000000000000000000000000000000 '
-  ];
+  var mapData = [ // the chunky soup you ordered, sir:
+    'dddddd45ag00000g04a0000000b076ddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+    'dddddddd45a0g0000g455a000760bdddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+    'dddddddddd4555a00000045556076ddddddd12223dddd122223ddddddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+    'ddddddddeeee00455a000000000bddddd122c00092222c00009223dddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
+    'dddddeeeee000000b455a0000076dddd1c000000000000000000093ddddb000075555a0000000075555555a000000000000000000000000000000000000000000000000000000000', 
+    'ddddeee00000000045a045555568ddd1c00000000000000000000092222c00008ddddb0000000767675a4a4a00000000000000000000000000000000000000000000000000000000', 
+    'ddeee0000000000000455a0g0009222c000000000000000000000000000000008ddddb0755555676e8gbe4a4a0000000000000000000000000000000000000000000000000000000', 
+    'dee0000000000000000008000g000gb0000000000000000000000075555a00008ddddb767555556ee92cee4500000000000000000000000000000000000000000000000000000000', 
+    'ee00000000000000000004555ag000b000000000000000000000008ddddb00008jjjj4676dddddeeeeeeeee000000000000000555550000000000000000000000000000000000000', 
+    '222230000000000000000000045a076000045a00000000000000008ddddb00008jjjj456dddddddeeeeeeed000000000000000000000000000000000000000000000000000000000', 
+    '00009300000000000000012300045600000004555555555555a0076ddddb00076jjjjdddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
+    '00000b000000000000000b093000000000000000000000000045560jjjj45556ijjjjiddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
+    '555556000000000000000b009230000000000000000000000000007jjjj55556diiiidddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
+    '000000000000000000001c0g0092223000000000000000000000008iiiidddddddddddddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
+    '00000000000000007551c00000g0009355a00000755a00000000009222223ddddddddddd12222223ddddddd000000000000000000000000000000000000000000000000000000000', 
+    '0007555555a007556ddbg000000000g8dd4a00076dd455555a007a0000008dddddddddddb0075a08ddddddd000000000000000000000000000000000000000000000000000000000', 
+    '5556dddddd4556dddddb000g0000g0093dd45556ddddddddd455645555556ddddddddddd4a08gb08ddddddd000000000000000000000000000000000000000000000000000000000'
+    ];
 
   var gameLoop = (function () {
     var STATE = 'map'; // keeps track of game state. which functions run during which state is determined by a switch statement at the end of this IIFE
@@ -275,7 +271,9 @@ var RPG_TEST_MAP_EDITOR = (function () {
       });
 
       return function (mapData) {
+        var offsetLimit = mapData[0].length * 16 - gameSettings.width;
         if (offset < 0) offset = 0;
+        if (offset > offsetLimit) offset = offsetLimit;
 
         for (var y = 0; y < vertical; y++) {
           for (var x = 0; x < horizontal; x++) {
@@ -295,27 +293,78 @@ var RPG_TEST_MAP_EDITOR = (function () {
         }
 
         var cursorX = Math.round(mouse.x / 16) * 16 - 16;
-        var cursorY = Math.round(mouse.y / 16) * 16 - 16
-        stage.fillStyle = hexToRgba(colors[2], 0.25);
-        stage.fillRect(cursorX, cursorY, 16, 16);
-        stage.drawImage(
-          tileset,
-          selectedTile * 16,
-          0,
-          16,
-          16,
-          cursorX,
-          cursorY,
-          16,
-          16
-        );
+        var cursorY = Math.round(mouse.y / 16) * 16 - 16;
 
-        if (mouse.down) {
-          if (cursorX / 16 >= 0 && cursorX / 16 <= 47 && cursorY / 16 >= 0 && cursorY / 16 <= 16) {
+        if (cursorX / 16 >= 0 && cursorX / 16 <= 47 && cursorY / 16 >= 0 && cursorY / 16 <= 16) {
+          stage.fillStyle = hexToRgba(colors[2], 0.25);
+          stage.fillRect(cursorX, cursorY, 16, 16);
+          stage.drawImage( // tile preview
+            tileset,
+            selectedTile * 16,
+            0,
+            16,
+            16,
+            cursorX,
+            cursorY,
+            16,
+            16
+          );
+          if (mouse.down) {
             mapData[cursorY / 16] = mapData[cursorY / 16].replaceAt(cursorX / 16 + Math.floor(offset / 16), convertBase(selectedTile.toString(), 10, 36));
           }
         }
+
+        drawText({ text: (offset === 0 ? '' : '<< a'), x: 40, y: gameSettings.height / 4, center: true }); // left/right scroll indicators
+        drawText({ text: (offset === offsetLimit ? '' : 'd >>'), x: gameSettings.width - 40, y: gameSettings.height / 4, center: true });
+        drawText({ text: '>> w', x: gameSettings.width - 90, y: gameSettings.height - 60, center: true }); // tile selection
+        drawText({ text: 's <<', x: gameSettings.width - 245, y: gameSettings.height - 60, center: true });
+        drawText({ text: 'Selected tile', x: gameSettings.width - 165, y: gameSettings.height - 110, center: true });
+        stage.strokeStyle = colors[20];
+        stage.lineWidth = 2;
+        stage.strokeRect(gameSettings.width - 200, gameSettings.height - 100, 64, 64);
+        stage.drawImage(tileset, selectedTile * 16, 0, 16, 16, gameSettings.width - 200, gameSettings.height - 100, 64, 64); // selected tile
       };
+    })();
+
+    var gui = (function() {
+      var buttons = {
+        import: new CButton({
+          text: 'Import',
+          size: 12,
+          x: 75,
+          y: gameSettings.height - 125,
+          width: 115,
+          height: 30,
+          run: function() {
+            mouse.down = false;
+            importMap();
+          }
+        }),
+        exportString: new CButton({
+          text: 'Export as string',
+          x: 159,
+          y: gameSettings.height - 85,
+          width: 282,
+          height: 30,
+          run: function() {
+            output.value = exportMapString(mapData);
+          }
+        }),
+        exportArray: new CButton({
+          text: 'Export as array',
+          x: 150,
+          y: gameSettings.height - 45,
+          width: 265,
+          height: 30,
+          run: function() {
+            output.value = exportMapArray(mapData);
+          }
+        })
+      };
+
+      return function() {
+        for (var b in buttons) if (buttons[b]) buttons[b].draw();
+      }
     })();
 
     var lastDelta = 0;
@@ -326,9 +375,10 @@ var RPG_TEST_MAP_EDITOR = (function () {
       fps = Math.floor(1000 / ms); // not actually fps, just frame interval converted into screen refresh rate
       stage.clearRect(0, 0, gameSettings.width, gameSettings.height); // clear screen
 
-      switch (STATE) { // run functions based on game state
+      switch (STATE) { // stupid switch statement still here event though all other states are gone
         case 'map':
           map(mapData);
+          gui();
           break;
         default:
           invalidState(); // if current state does not exist...
@@ -345,8 +395,6 @@ var RPG_TEST_MAP_EDITOR = (function () {
     go: function () { // called once document body loads
       init();
       document.body.appendChild(canvas);
-      document.body.appendChild(importButton);
-      document.body.appendChild(exportButton);
       document.body.appendChild(output);
       requestAnimationFrame(gameLoop);
     }
