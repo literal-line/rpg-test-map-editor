@@ -8,7 +8,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
   var stage = canvas.getContext('2d');
   var output = document.createElement('textarea');
   var gameSettings = {
-    version: 'v0.1-20210113-2137est',
+    version: 'v0.1-20210117-2124est',
     authors: ['Literal Line'], // in case you mod or whatever
     width: 768,
     height: 432,
@@ -40,26 +40,27 @@ var RPG_TEST_MAP_EDITOR = (function () {
   };
 
   var importMap = function() { // import map
-    var data = prompt('Paste map data string below:');
-    if (!data) return;
-    data = data.split(' ');
-    mapData = data;
+    var input = prompt('Paste map data string below:');
+    if (!input) return;
+    input = input.replace(/'/g, '"');
+    mapData = JSON.parse(input);
   };
 
-  var exportMapString = function(data) { // export map as sting (for use with import)
-    var output = '';
-    for (var i = 0; i < data.length; i++) {
-      output = output + data[i] + (i === data.length - 1 ? '' : ' ');
-    }
+  var exportMap = function(data) { // export map as json string
+    var output = JSON.stringify(data);
+    output = output.replace(/"/g, '\''); // i hate double quotes
+    output = output.replace(/,/g, ',\n');
     return output;
   };
 
-  var exportMapArray = function(data) { // export map as array (for use with js)
-    var output = '';
-    for (var i = 0; i < data.length; i++) {
-      output = output + (i === 0 ? '[ // the chunky soup you ordered, sir:\n\'' : '\'') + data[i] + (i === data.length - 1 ? '\'\n]' : '\', \n');
-    }
-    return output;
+  var exportMapFile = function(data) { // export map as json file
+    var fileName = prompt('Enter file name below:');
+    var link = document.createElement('a');
+    var file = new Blob([JSON.stringify(data)], {type: 'text/plain'});
+    link.href = URL.createObjectURL(file);
+    link.download = fileName + '.json';
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   var mouseClick = function () { // prevents buttons from being clicked when click-dragging
@@ -78,12 +79,14 @@ var RPG_TEST_MAP_EDITOR = (function () {
 
   var assets = { // images/audio
     tilesetMap: './assets/tilesetMap.png',
+    tilesetMapIcons: './assets/tilesetMapIcons.png',
     tilesetGrass: './assets/tilesetGrass.png',
     soundClick: './assets/click.wav'
   };
 
   var sprites = { // image to img
     tilesetMap: newImage(assets.tilesetMap),
+    tilesetMapIcons: newImage(assets.tilesetMapIcons),
     tilesetGrass: newImage(assets.tilesetGrass)
   };
 
@@ -102,7 +105,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
     '#73392e',
     '#34111f',
     '#000000',
-    '#273b2d',
+    '#375340',
     '#458239',
     '#9cb93b',
     '#ffd832',
@@ -136,8 +139,8 @@ var RPG_TEST_MAP_EDITOR = (function () {
     canvas.style.height = gameSettings.heightCSS;
     canvas.style.background = gameSettings.bg;
     stage.imageSmoothingEnabled = gameSettings.aa;
-    output.rows = 17;
-    output.cols = 200;
+    output.rows = 10;
+    output.cols = 50;
     setupEventListeners();
   };
 
@@ -215,31 +218,54 @@ var RPG_TEST_MAP_EDITOR = (function () {
     };
   })();
 
-  var mapData = [ // the chunky soup you ordered, sir:
-    'dddddd45ag00000g04a0000000b076ddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
-    'dddddddd45a0g0000g455a000760bdddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
-    'dddddddddd4555a00000045556076ddddddd12223dddd122223ddddddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
-    'ddddddddeeee00455a000000000bddddd122c00092222c00009223dddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000', 
-    'dddddeeeee000000b455a0000076dddd1c000000000000000000093ddddb000075555a0000000075555555a000000000000000000000000000000000000000000000000000000000', 
-    'ddddeee00000000045a045555568ddd1c00000000000000000000092222c00008ddddb0000000767675a4a4a00000000000000000000000000000000000000000000000000000000', 
-    'ddeee0000000000000455a0g0009222c000000000000000000000000000000008ddddb0755555676e8gbe4a4a0000000000000000000000000000000000000000000000000000000', 
-    'dee0000000000000000008000g000gb0000000000000000000000075555a00008ddddb767555556ee92cee4500000000000000000000000000000000000000000000000000000000', 
-    'ee00000000000000000004555ag000b000000000000000000000008ddddb00008jjjj4676dddddeeeeeeeee000000000000000555550000000000000000000000000000000000000', 
-    '222230000000000000000000045a076000045a00000000000000008ddddb00008jjjj456dddddddeeeeeeed000000000000000000000000000000000000000000000000000000000', 
-    '00009300000000000000012300045600000004555555555555a0076ddddb00076jjjjdddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
-    '00000b000000000000000b093000000000000000000000000045560jjjj45556ijjjjiddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
-    '555556000000000000000b009230000000000000000000000000007jjjj55556diiiidddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
-    '000000000000000000001c0g0092223000000000000000000000008iiiidddddddddddddddddddddddddddd000000000000000000000000000000000000000000000000000000000', 
-    '00000000000000007551c00000g0009355a00000755a00000000009222223ddddddddddd12222223ddddddd000000000000000000000000000000000000000000000000000000000', 
-    '0007555555a007556ddbg000000000g8dd4a00076dd455555a007a0000008dddddddddddb0075a08ddddddd000000000000000000000000000000000000000000000000000000000', 
-    '5556dddddd4556dddddb000g0000g0093dd45556ddddddddd455645555556ddddddddddd4a08gb08ddddddd000000000000000000000000000000000000000000000000000000000'
-    ];
+  var mapData = { // the chunky soup you ordered sir...
+    width: 144,
+    bg: [
+      'dddddd45ag00000g04a0000000b076ddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      'dddddddd45a0g0000g455a000760bdddddddddddddddddddddddddddddd8000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      'dddddddddd4555a00000045556076ddddddd12223dddd122223ddddddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      'ddddddddeeee00455a000000000bddddd122c00092222c00009223dddddb000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      'dddddeeeee000000b455a0000076dddd1c000000000000000000093ddddb000075555a0000000075555555a000000000000000000000000000000000000000000000000000000000',
+      'ddddeee00000000045a045555568ddd1c00000000000000000000092222c00008ddddb0000000767675a4a4a00000000000000000000000000000000000000000000000000000000',
+      'ddeee0000000000000455a0g0009222c000000000000000000000000000000008ddddb0755555676e8gbe4a4a0000000000000000000000000000000000000000000000000000000',
+      'dee0000000000000000008000g000gb0000000000000000000000075555a00008ddddb767555556ee92cee4500000000000000000000000000000000000000000000000000000000',
+      'ee00000000000000000004555ag000b000000000000000000000008ddddb00008jjjj4676dddddeeeeeeeee000000000000000555550000000000000000000000000000000000000',
+      '222230000000000000000000045a076000045a00000000000000008ddddb00008jjjj456dddddddeeeeeeed000000000000000000000000000000000000000000000000000000000',
+      '00009300000000000000012300045600000004555555555555a0076ddddb00076jjjjdddddddddddddddddd000000000000000000000000000000000000000000000000000000000',
+      '00000b000000000000000b093000000000000000000000000045560jjjj45556ijjjjiddddddddddddddddd000000000000000000000000000000000000000000000000000000000',
+      '555556000000000000000b009230000000000000000000000000007jjjj55556diiiidddddddddddddddddd000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000001c0g0092223000000000000000000000008iiiidddddddddddddddddddddddddddd000000000000000000000000000000000000000000000000000000000',
+      '00000000000000007551c00000g0009355a00000755a00000000009222223ddddddddddd12222223ddddddd000000000000000000000000000000000000000000000000000000000',
+      '0007555555a007556ddbg000000000g8dd4a00076dd455555a007a0000008dddddddddddb0075a08ddddddd000000000000000000000000000000000000000000000000000000000',
+      '5556dddddd4556dddddb000g0000g0093dd45556ddddddddd455645555556ddddddddddd4a08gb08ddddddd000000000000000000000000000000000000000000000000000000000'
+    ],
+    fg: [
+      '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000000000000000000077700000077770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000100000000000000000070000707777007000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000100000000000000000700000000000000000077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000011030000000000007000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000101000000000077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000000000000000000000070070000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000020000000000000007077707707777007000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '001000000000000000000000001000000000100000000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '100000100000000000001000000000000000001101110101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000100000000000011000000010000000000000000110001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000001110000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000011100000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000001100000000000000000000000100000000000000100000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+    ]
+  };
 
   var gameLoop = (function () {
     var STATE = 'map'; // keeps track of game state. which functions run during which state is determined by a switch statement at the end of this IIFE
 
     var tilesets = { // tile spritesheets
       map: sprites.tilesetMap,
+      mapIcons: sprites.tilesetMapIcons,
       grass: sprites.tilesetGrass
     };
 
@@ -254,41 +280,62 @@ var RPG_TEST_MAP_EDITOR = (function () {
       var horizontal = Math.floor(gameSettings.width / 16) + 1;
       var vertical = Math.floor(gameSettings.height / 16) - 10;
       var offset = 0;
-      var tileset = tilesets.map;
-      var selectedTile = 0;
-      var maxTiles = 18
+      var offsetLimit;
+      var tileset = {
+        bg: tilesets.map,
+        fg: tilesets.mapIcons
+      };
+      var currentLayer = 'bg';
+      var selectedTile = {
+        bg: 0,
+        fg: 0
+      };
 
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'w' || e.key === 'ArrowUp') {
-          if (selectedTile < maxTiles + 1) selectedTile++;
-        } else if (e.key === 's' || e.key === 'ArrowDown') {
-          if (selectedTile > 0) selectedTile--;
-        } else if (e.key === 'd' || e.key === 'ArrowRight') {
-          offset += 16;
-        } else if (e.key ==='a' || e.key === 'ArrowLeft') {
-          offset -= 16;
+        var maxTiles = {
+          bg: tileset.bg.width / 16,
+          fg: tileset.fg.width / 16
+        };
+        var selected = selectedTile[currentLayer];
+        var max = maxTiles[currentLayer] - 1;
+        switch(e.code) {
+          case 'KeyW' || 'ArrowUp':
+            if (selected < max) selectedTile[currentLayer]++;
+            break;
+          case 'KeyS' || 'ArrowDown':
+            if (selected > 0) selectedTile[currentLayer]--;
+            break;
+          case 'KeyD' || 'ArrowRight':
+            if (offset < offsetLimit) offset += 16;
+            break;
+          case 'KeyA' || 'ArrowLeft':
+            if (offset > 0) offset -= 16;
+            break;
+          case 'Space':
+            e.preventDefault();
+            if (currentLayer === 'bg') {
+              currentLayer = 'fg';
+            } else if (currentLayer === 'fg') {
+              currentLayer = 'bg';
+            }
+            break;
         }
       });
 
       return function (mapData) {
-        var offsetLimit = mapData[0].length * 16 - gameSettings.width;
-        if (offset < 0) offset = 0;
-        if (offset > offsetLimit) offset = offsetLimit;
+        offsetLimit = mapData.width * 16 - gameSettings.width;
+        var selectedTileset = tileset[currentLayer];
+        var bgTiles = mapData.bg;
+        var fgTiles = mapData.fg;
 
         for (var y = 0; y < vertical; y++) {
           for (var x = 0; x < horizontal; x++) {
-            var cur = mapData[y].charAt(x + Math.floor(offset / 16));
-            stage.drawImage(
-              tileset,
-              (isNaN(parseInt(cur)) ? convertBase(cur, 36, 10) : parseInt(cur)) * 16, // check for non-decimal digit
-              0,
-              16,
-              16,
-              x * 16 - (offset % 16),
-              y * 16,
-              16,
-              16
-            );
+            var curBg = bgTiles[y].charAt(x + Math.floor(offset / 16));
+            var curFg = fgTiles[y].charAt(x + Math.floor(offset / 16));
+            var curBgTile = (isNaN(parseInt(curBg)) ? convertBase(curBg, 36, 10) : parseInt(curBg)) * 16;
+            var curFgTile = (isNaN(parseInt(curFg)) ? convertBase(curFg, 36, 10) : parseInt(curFg)) * 16;
+            if (curBgTile) stage.drawImage(tileset.bg, curBgTile, 0, 16, 16, x * 16 - (offset % 16), y * 16, 16, 16); // draw bg
+            if (curFgTile) stage.drawImage(tileset.fg, curFgTile, 0, 16, 16, x * 16 - (offset % 16), y * 16, 16, 16); // draw fg
           }
         }
 
@@ -296,33 +343,32 @@ var RPG_TEST_MAP_EDITOR = (function () {
         var cursorY = Math.round(mouse.y / 16) * 16 - 16;
 
         if (cursorX / 16 >= 0 && cursorX / 16 <= 47 && cursorY / 16 >= 0 && cursorY / 16 <= 16) {
-          stage.fillStyle = hexToRgba(colors[2], 0.25);
+          stage.fillStyle = hexToRgba((currentLayer === 'bg' ? colors[6] : colors[10]), 0.5);
           stage.fillRect(cursorX, cursorY, 16, 16);
-          stage.drawImage( // tile preview
-            tileset,
-            selectedTile * 16,
-            0,
-            16,
-            16,
-            cursorX,
-            cursorY,
-            16,
-            16
-          );
+          stage.drawImage(selectedTileset, selectedTile[currentLayer] * 16, 0, 16, 16, cursorX, cursorY, 16, 16); // tile preview
           if (mouse.down) {
-            mapData[cursorY / 16] = mapData[cursorY / 16].replaceAt(cursorX / 16 + Math.floor(offset / 16), convertBase(selectedTile.toString(), 10, 36));
+            switch(currentLayer) {
+              case 'bg':
+                bgTiles[cursorY / 16] = bgTiles[cursorY / 16].replaceAt(cursorX / 16 + Math.floor(offset / 16), convertBase(selectedTile.bg.toString(), 10, 36));
+                break;
+              case 'fg':
+                fgTiles[cursorY / 16] = fgTiles[cursorY / 16].replaceAt(cursorX / 16 + Math.floor(offset / 16), convertBase(selectedTile.fg.toString(), 10, 36));
+                break;
+            }
           }
         }
 
         drawText({ text: (offset === 0 ? '' : '<< a'), x: 40, y: gameSettings.height / 4, center: true }); // left/right scroll indicators
         drawText({ text: (offset === offsetLimit ? '' : 'd >>'), x: gameSettings.width - 40, y: gameSettings.height / 4, center: true });
-        drawText({ text: '>> w', x: gameSettings.width - 90, y: gameSettings.height - 60, center: true }); // tile selection
-        drawText({ text: 's <<', x: gameSettings.width - 245, y: gameSettings.height - 60, center: true });
-        drawText({ text: 'Selected tile', x: gameSettings.width - 165, y: gameSettings.height - 110, center: true });
+
+        drawText({ text: '>> w', x: gameSettings.width - 150, y: gameSettings.height - 75, center: true }); // tile selection
+        drawText({ text: 's <<', x: gameSettings.width - 305, y: gameSettings.height - 75, center: true });
+        drawText({ text: 'Selected tile', x: gameSettings.width - 225, y: gameSettings.height - 135, center: true });
+        drawText({ text: '[space] Current layer: ' + currentLayer, x: gameSettings.width - 225, y: gameSettings.height - 20, center: true });
         stage.strokeStyle = colors[20];
         stage.lineWidth = 2;
-        stage.strokeRect(gameSettings.width - 200, gameSettings.height - 100, 64, 64);
-        stage.drawImage(tileset, selectedTile * 16, 0, 16, 16, gameSettings.width - 200, gameSettings.height - 100, 64, 64); // selected tile
+        stage.strokeRect(gameSettings.width - 260, gameSettings.height - 115, 64, 64);
+        stage.drawImage(selectedTileset, selectedTile[currentLayer] * 16, 0, 16, 16, gameSettings.width - 260, gameSettings.height - 115, 64, 64); // selected tile
       };
     })();
 
@@ -342,22 +388,22 @@ var RPG_TEST_MAP_EDITOR = (function () {
         }),
         exportString: new CButton({
           text: 'Export as string',
-          x: 159,
+          x: 158,
           y: gameSettings.height - 85,
           width: 282,
           height: 30,
           run: function() {
-            output.value = exportMapString(mapData);
+            output.value = exportMap(mapData);
           }
         }),
-        exportArray: new CButton({
-          text: 'Export as array',
-          x: 150,
+        exportObject: new CButton({
+          text: 'Export as file',
+          x: 140,
           y: gameSettings.height - 45,
-          width: 265,
+          width: 246,
           height: 30,
           run: function() {
-            output.value = exportMapArray(mapData);
+            exportMapFile(mapData);
           }
         })
       };
