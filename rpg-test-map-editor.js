@@ -8,7 +8,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
   var stage = canvas.getContext('2d');
   var output = document.createElement('textarea');
   var gameSettings = {
-    version: 'v0.1-20210117-2124est',
+    version: 'v0.1-20210121-2029est',
     authors: ['Literal Line'], // in case you mod or whatever
     width: 768,
     height: 432,
