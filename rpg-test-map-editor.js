@@ -19,7 +19,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
   };
 
   var setupEventListeners = function () {
-    canvas.addEventListener('mousemove', function (e) {
+    document.addEventListener('mousemove', function (e) {
       var coords = getMousePos(canvas, e);
       mouse.x = coords.x;
       mouse.y = coords.y;
@@ -27,16 +27,34 @@ var RPG_TEST_MAP_EDITOR = (function () {
     canvas.addEventListener('contextmenu', function (e) {
       e.preventDefault();
     });
-    canvas.addEventListener('mousedown', function () {
-      mouse.down = true;
-      mouseClick();
+    canvas.addEventListener('mousedown', function (e) {
+      if (e.button === 0) {
+        mouse.down = true;
+        mouseClick();
+      }
     });
-    canvas.addEventListener('mouseup', function () {
-      mouse.down = false;
+    canvas.addEventListener('mouseup', function (e) {
+      if (e.button === 0) mouse.down = false;
     });
     canvas.addEventListener('mouseleave', function () {
       mouse.down = false;
     });
+  };
+
+  var setupCanvas = function() {
+    canvas.width = gameSettings.width;
+    canvas.height = gameSettings.height;
+    canvas.style.width = gameSettings.widthCSS;
+    canvas.style.height = gameSettings.heightCSS;
+    canvas.style.background = gameSettings.bg;
+    canvas.style.imageRendering = gameSettings.aa ? 'auto' : 'pixelated';
+    canvas.style.imageRendering = gameSettings.aa ? 'auto' : '-moz-crisp-edges';
+    stage.imageSmoothingEnabled = gameSettings.aa;
+  };
+
+  var setupOutput = function() {
+    output.rows = 10;
+    output.cols = 50;
   };
 
   var importMap = function() { // import map
@@ -133,14 +151,8 @@ var RPG_TEST_MAP_EDITOR = (function () {
   var init = function () {
     console.log('rpg-test-map-editor ' + gameSettings.version);
     console.log('Authors: ' + gameSettings.authors);
-    canvas.width = gameSettings.width;
-    canvas.height = gameSettings.height;
-    canvas.style.width = gameSettings.widthCSS;
-    canvas.style.height = gameSettings.heightCSS;
-    canvas.style.background = gameSettings.bg;
-    stage.imageSmoothingEnabled = gameSettings.aa;
-    output.rows = 10;
-    output.cols = 50;
+    setupCanvas();
+    setupOutput();
     setupEventListeners();
   };
 
