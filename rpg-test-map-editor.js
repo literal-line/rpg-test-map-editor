@@ -18,7 +18,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
     aa: false // leave this off to keep images c r i s p
   };
 
-  var setupEventListeners = function () {
+  var setupMouseEventListeners = function () {
     document.addEventListener('mousemove', function (e) {
       var coords = getMousePos(canvas, e);
       mouse.x = coords.x;
@@ -52,6 +52,19 @@ var RPG_TEST_MAP_EDITOR = (function () {
     stage.imageSmoothingEnabled = gameSettings.aa;
   };
 
+  var setupAudio = function () { // prevents sfx from interrupting sound in other tabs on certain browsers
+    for (var a in audio) {
+      audio[a].volume = 0.5;
+    }
+
+    audio.silence.addEventListener('ended', function () {
+      audio.silence.play();
+    });
+    document.addEventListener('mousedown', function () {
+      audio.silence.play();
+    });
+  };
+
   var setupOutput = function() {
     output.rows = 10;
     output.cols = 50;
@@ -73,6 +86,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
 
   var exportMapFile = function(data) { // export map as json file
     var fileName = prompt('Enter file name below:');
+    if (fileName === null) return;
     var link = document.createElement('a');
     var file = new Blob([JSON.stringify(data)], {type: 'text/plain'});
     link.href = URL.createObjectURL(file);
@@ -99,6 +113,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
     tilesetMap: './assets/tilesetMap.png',
     tilesetMapIcons: './assets/tilesetMapIcons.png',
     tilesetGrass: './assets/tilesetGrass.png',
+    soundSilence: './assets/5-seconds-of-silence.mp3',
     soundClick: './assets/click.wav'
   };
 
@@ -109,6 +124,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
   };
 
   var audio = {
+    silence: new Audio(assets.soundSilence),
     click: newWav(assets.soundClick)
   };
 
@@ -147,13 +163,15 @@ var RPG_TEST_MAP_EDITOR = (function () {
     '#c03b94',
     '#601761'
   ];
+  
 
   var init = function () {
     console.log('rpg-test-map-editor ' + gameSettings.version);
     console.log('Authors: ' + gameSettings.authors);
+    setupMouseEventListeners();
     setupCanvas();
     setupOutput();
-    setupEventListeners();
+    setupAudio();
   };
 
   var getMousePos = function (c, e) { // gets mouse pos on canvas by taking actual canvas position on document into account
@@ -188,47 +206,41 @@ var RPG_TEST_MAP_EDITOR = (function () {
     this.height = obj.height || 75;
     this.borderColor = obj.borderColor || 1;
     this.bgColor = obj.bgColor || 8;
+    this.bgHoverColor = obj.bgHoverColor || 2;
     this.border = obj.border;
-    this.run = obj.run; // <-- will call this function when clicked
+    this.hover = obj.hover; // <-- will call this function on hover
+    this.click = obj.click; // <-- will call this function on click
+    this.noClickSound = obj.noClickSound ? true : false;
+    this.id = obj.id;
   };
 
-  CButton.prototype.draw = (function () { // draw proto (might change name later...)
-    audio.click.volume = 0.5;
+  CButton.prototype.draw = function () { // draw proto (might change name later...)
+    var mx = mouse.x;
+    var my = mouse.y;
+    var x = this.x;
+    var y = this.y;
+    var width = this.width;
+    var height = this.height;
+    if (this.border) {
+      stage.lineWidth = 2;
+      stage.strokeStyle = colors[this.borderColor];
+      stage.strokeRect(x - width / 2, y - height / 2, width, height);
+    }
+    stage.fillStyle = colors[this.bgColor];
+    stage.fillRect(x - width / 2, y - height / 2, width, height);
 
-    return function () {
-      var mx = mouse.x;
-      var my = mouse.y;
-      var x = this.x;
-      var y = this.y;
-      var width = this.width;
-      var height = this.height;
-      if (this.border) {
-        stage.lineWidth = 2;
-        stage.strokeStyle = colors[this.borderColor];
-        stage.strokeRect(x - width / 2, y - height / 2, width, height);
-      }
-      stage.fillStyle = colors[this.bgColor];
+    if (mx >= x - width / 2 && mx < x + width / 2 && my >= y - height / 2 && my < y + height / 2) {
+      stage.fillStyle = hexToRgba(colors[this.bgHoverColor], 0.25);
       stage.fillRect(x - width / 2, y - height / 2, width, height);
-
-      if (mx >= x - width / 2 && mx <= x + width / 2 && my >= y - height / 2 && my <= y + height / 2) {
-        stage.fillStyle = hexToRgba(colors[2], 0.25);
-        stage.fillRect(x - width / 2, y - height / 2, width, height);
-        if (mouse.click) {
-          audio.click.play();
-          mouse.click = false;
-          this.run();
-        }
+      if (this.hover) this.hover();
+      if (mouse.click) {
+        if (!this.noClickSound) audio.click.play();
+        mouse.click = false;
+        this.click();
       }
-      if (this.text)
-        drawText({
-          text: this.text,
-          color: this.color,
-          x: x,
-          y: y + 5,
-          center: true
-        });
-    };
-  })();
+    }
+    if (this.text) drawText({ text: this.text, color: this.color, x: x, y: y + 5, center: true });
+  };
 
   var mapData = { // the chunky soup you ordered sir...
     width: 144,
@@ -393,7 +405,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
           y: gameSettings.height - 125,
           width: 115,
           height: 30,
-          run: function() {
+          click: function() {
             mouse.down = false;
             importMap();
           }
@@ -404,7 +416,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
           y: gameSettings.height - 85,
           width: 282,
           height: 30,
-          run: function() {
+          click: function() {
             output.value = exportMap(mapData);
           }
         }),
@@ -414,7 +426,7 @@ var RPG_TEST_MAP_EDITOR = (function () {
           y: gameSettings.height - 45,
           width: 246,
           height: 30,
-          run: function() {
+          click: function() {
             exportMapFile(mapData);
           }
         })
